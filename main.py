@@ -1,15 +1,34 @@
-import telebot
-from telebot import types
 import json
 import os
-from datetime import datetime, timedelta
-import time
 import threading
+import time
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import telebot
+from telebot import types
 
-bot = telebot.TeleBot('YOUR_TOKEN_HERE')
+load_dotenv()
+
+TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+
+# Убедитесь, что токен был загружен корректно
+if not TOKEN:
+    raise ValueError("No TELEGRAM_BOT_TOKEN found in environment variables")
+
+bot = telebot.TeleBot(TOKEN)
 
 schedule_file = 'schedule.json'
 
+commands = [
+    telebot.types.BotCommand('/start', 'Запустить бота'),
+    telebot.types.BotCommand('/help', 'Помощь'),
+    telebot.types.BotCommand('/day_manager', 'Управление расписанием'),
+    telebot.types.BotCommand('/weekly_schedule', 'Расписание на неделю'),
+    telebot.types.BotCommand('/reminder_list', 'Список напоминаний')
+
+]
+
+bot.set_my_commands(commands)
 def load_schedule():
     """Loads schedule data from a JSON file."""
     if os.path.exists(schedule_file):
