@@ -29,6 +29,8 @@ commands = [
 ]
 
 bot.set_my_commands(commands)
+
+
 def load_schedule():
     """Loads schedule data from a JSON file."""
     if os.path.exists(schedule_file):
@@ -38,17 +40,20 @@ def load_schedule():
     else:
         return {}, []
 
+
 def save_schedule(schedule, reminders):
     """Saves schedule and reminders data to a JSON file."""
     data = {'schedule': schedule, 'reminders': reminders}
     with open(schedule_file, 'w', encoding='utf-8') as file:
         json.dump(data, file, ensure_ascii=False, indent=4)
 
+
 def start_markup():
     """Creates and returns the initial reply keyboard markup for the bot."""
     markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     markup.add('Менеджер расписания', 'Показать расписание на неделю', 'Показать установленные напоминания')
     return markup
+
 
 def day_action_markup():
     """Creates and returns the reply keyboard markup for daily actions."""
@@ -57,11 +62,13 @@ def day_action_markup():
                'Удалить напоминание')
     return markup
 
+
 def day_schedule_markup():
     """Creates and returns the reply keyboard markup for selecting a day of the week."""
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     markup.add('Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье')
     return markup
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -70,6 +77,7 @@ def start(message):
                            'Привет, {0.first_name}! \nЯ бот для управления расписанием. \nВыбери команду'.format(
                                message.from_user), reply_markup=start_markup())
     bot.register_next_step_handler(msg, start_perform_actions)
+
 
 @bot.message_handler(commands=['help'])
 def help(message):
@@ -85,20 +93,24 @@ def help(message):
 """
     bot.send_message(message.chat.id, help_text)
 
+
 @bot.message_handler(commands=['day_manager'])
 def day_schedule(message):
     """Allows the user to manage the schedule for a specific day."""
-    msg = bot.send_message(message.chat.id, 'Выберите день недели:', reply_markup=day_schedule_markup())
+    bot.send_message(message.chat.id, 'Выберите день недели:', reply_markup=day_schedule_markup())
+
 
 @bot.message_handler(commands=['weekly_schedule'])
 def weekly_schedule(message):
     """Shows the schedule for the entire week."""
     show_weekly_schedule(message)
 
+
 @bot.message_handler(commands=['reminder_list'])
 def reminder_list(message):
     """Lists all set reminders."""
     show_reminders(message)
+
 
 @bot.message_handler(
     func=lambda message: message.text in ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота',
@@ -108,14 +120,16 @@ def handle_day(message):
     msg = bot.send_message(message.chat.id, f"Выберите действие для дня {day}:", reply_markup=day_action_markup())
     bot.register_next_step_handler(msg, day_perform_action, day)
 
+
 def start_perform_actions(message):
     """Determines actions based on user's choice from the start menu."""
     if message.text == 'Менеджер расписания':
-        msg = bot.send_message(message.chat.id, 'Выберите день недели:', reply_markup=day_schedule_markup())
+        bot.send_message(message.chat.id, 'Выберите день недели:', reply_markup=day_schedule_markup())
     elif message.text == 'Показать расписание на неделю':
         show_weekly_schedule(message)
     elif message.text == 'Показать установленные напоминания':
         show_reminders(message)
+
 
 def show_weekly_schedule(message):
     """Compiles and sends the weekly schedule to the user."""
@@ -131,10 +145,11 @@ def show_weekly_schedule(message):
             response += f"{day}: пока нет запланированных событий.\n"
     bot.send_message(message.chat.id, response.strip())
 
+
 def show_reminders(message):
     """Sorts and displays all reminders to the user."""
     _, reminders = load_schedule()
-    if reminders != []:
+    if reminders:
         # Sorting the reminders by time
         sorted_reminders = sorted(reminders, key=parse_time)
 
@@ -145,6 +160,7 @@ def show_reminders(message):
         bot.send_message(message.chat.id, response.strip())
     else:
         bot.send_message(message.chat.id, "Нет установленных напоминаний.")
+
 
 def day_perform_action(message, day):
     """Handles actions related to daily schedule management based on user input."""
@@ -177,6 +193,7 @@ def add_event(message, day):
         bot.send_message(message.chat.id, "Неправильный формат ввода. Пожалуйста, используйте формат 'ЧЧ:ММ Событие'.")
     day_schedule(message)
 
+
 def show_schedule(message, day):
     """Displays the schedule for a specified day."""
 
@@ -197,6 +214,7 @@ def show_schedule(message, day):
     bot.send_message(message.chat.id, response)
     day_schedule(message)
 
+
 def delete_event_prompt(message, day):
     """Prompts user to select an event for deletion."""
     schedule, _ = load_schedule()
@@ -210,6 +228,7 @@ def delete_event_prompt(message, day):
         bot.send_message(message.chat.id, "В этот день нет запланированных событий для удаления.")
         day_schedule(message)
 
+
 def delete_event(message, day):
     """Deletes a selected event from the schedule."""
     time = message.text
@@ -221,6 +240,7 @@ def delete_event(message, day):
     else:
         bot.send_message(message.chat.id, "Событие не найдено.")
     day_schedule(message)
+
 
 def set_reminders(message, day):
     """Sets a reminder for a specified day based on user input."""
@@ -236,7 +256,8 @@ def set_reminders(message, day):
         next_date = today + timedelta(days=days_until_target)
 
     msg = bot.send_message(chat_id,
-                           f"Введите время и текст напоминания для {day}, {next_date.strftime('%d-%m-%Y')} в формате 'ЧЧ:ММ Текст напоминания':")
+                           f"Введите время и текст напоминания для {day}, {next_date.strftime('%d-%m-%Y')} "
+                           f"в формате 'ЧЧ:ММ Текст напоминания':")
     bot.register_next_step_handler(msg, process_reminder_input, day, next_date)
 
 
@@ -249,7 +270,8 @@ def process_reminder_input(message, day, next_date):
             raise ValueError("Past time")
     except ValueError:
         bot.send_message(message.chat.id,
-                         "Неправильный формат ввода или время уже прошло. Пожалуйста, используйте формат 'ЧЧ:ММ Текст напоминания'.")
+                         "Неправильный формат ввода или время уже прошло. "
+                         "Пожалуйста, используйте формат 'ЧЧ:ММ Текст напоминания'.")
         return set_reminders(message, day)
 
     schedule, reminders = load_schedule()
@@ -270,7 +292,7 @@ def parse_time(reminder):
 def delete_reminder(message):
     """Initiates the process to delete a reminder."""
     schedule, reminders = load_schedule()
-    if reminders != []:
+    if reminders:
         to_del_reminders = sorted(reminders, key=parse_time)
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
         for reminder in to_del_reminders:
@@ -312,10 +334,11 @@ def send_reminders():
                 time.sleep(60)
         time.sleep(1)
 
+
 def setup_reminder_thread():
     """Sets up a background thread to continuously send reminders."""
     reminder_thread = threading.Thread(target=send_reminders)
-    #reminder_thread.daemon = True
+    # reminder_thread.daemon = True
     reminder_thread.start()
 
 
